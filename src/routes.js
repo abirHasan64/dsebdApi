@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const router = express.Router();
 const { scrapeLive, scrapeDSE30, scrapeTop20 } = require('./scraper');
 const { scrapeArchiveFromWeb } = require('./archiveFetcher');
@@ -179,7 +180,7 @@ router.get('/archive/:code', async (req, res) => {
 
 // Simple API health check
 router.get('/', (req, res) => {
-  res.send('API is working');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 module.exports = router;
