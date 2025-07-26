@@ -24,7 +24,7 @@ Folder structure after anyone clones this repo:
 
 after cloning do this:
 1. in the terminal type "npm install"
-2. create a .env file in that file use
+2. create a .env and in that file and use
     DB_USER = YOUR_USER_NAME
     DB_PASS = YOUR_MONGODB_PASSWORD
 
