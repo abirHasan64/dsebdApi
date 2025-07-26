@@ -1,0 +1,55 @@
+This api fetches live data from dsebd.org website.
+Folder structure after anyone clones this repo:
+📁 DSE_API_Project/
+├── 📁 node_modules/
+└── 📁 src/
+    ├── 📁 scrapers/
+    │   ├── 📄 scrapeDSE30.js
+    │   ├── 📄 scrapeLive.js
+    │   ├── 📄 scrapeTop20.js
+    │   ├── 📄 parseCBUL.js
+    │   ├── 📄 parseNAV.js
+    │   ├── 📄 parseEPS.js
+    │   ├── 📄 scrapeIndicesFromHomepage.js
+    │   └── 📄 getStockInfo.js
+    ├── 📄 archiveFetcher.js
+    ├── 📄 db.js
+    ├── 📄 index.html
+    ├── 📄 index.js
+    ├── 📄 routes.js
+    ├── 📄 scraper.js
+    └── 📄 style.css
+├── 📄 autoScraper.js
+├── 📄 package-lock.json
+└── 📄 package.json
+
+after cloning do this:
+1. in the terminal type "npm install"
+2. create a .env file in that file use
+    DB_USER = YOUR_USER_NAME
+    DB_PASS = YOUR_MONGODB_PASSWORD
+
+The final folder structure should look like the following:
+📁 DSE_API_Project/
+├── 📁 node_modules/
+└── 📁 src/
+    ├── 📁 scrapers/
+    │   ├── 📄 scrapeDSE30.js
+    │   ├── 📄 scrapeLive.js
+    │   ├── 📄 scrapeTop20.js
+    │   ├── 📄 parseCBUL.js
+    │   ├── 📄 parseNAV.js
+    │   ├── 📄 parseEPS.js
+    │   ├── 📄 scrapeIndicesFromHomepage.js
+    │   └── 📄 getStockInfo.js
+    ├── 📄 archiveFetcher.js
+    ├── 📄 db.js
+    ├── 📄 index.html
+    ├── 📄 index.js
+    ├── 📄 routes.js
+    ├── 📄 scraper.js
+    └── 📄 style.css
+├── ⚙️.env
+├── 📄 autoScraper.js
+├── 📄 package-lock.json
+└── 📄 package.json
