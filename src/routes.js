@@ -148,6 +148,48 @@ router.get('/archive', async (req, res) => {
   }
 });
 
+router.get('/archive/latest', async (req, res) => {
+  try {
+    const db = await connectDB();
+    const col = db.collection('history');
+
+    // Get the latest archive entry
+    const latest = await col
+      .find()
+      .sort({ date: -1 })
+      .limit(1)
+      .toArray();
+
+    if (latest.length === 0) {
+      return res.status(404).json({ message: 'No data found in history collection.' });
+    }
+
+    const latestEntry = latest[0];
+
+    // Check for duplicates: count how many documents share this same date + code
+    const duplicateCount = await col.countDocuments({
+      date: latestEntry.date,
+      code: latestEntry.code
+    });
+
+    let duplicates = [];
+    if (duplicateCount > 1) {
+      duplicates = await col
+        .find({ date: latestEntry.date, code: latestEntry.code })
+        .toArray();
+    }
+
+    res.json({
+      latest: latestEntry,
+      duplicateCount,
+      duplicates: duplicateCount > 1 ? duplicates : undefined
+    });
+  } catch (e) {
+    console.error('Error in /archive/latest:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Archive by stock code
 router.get('/archive/:code', async (req, res) => {
   const { startDate, endDate } = req.query;
@@ -176,6 +218,7 @@ router.get('/archive/:code', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 
 
 // Simple API health check
