@@ -17,45 +17,70 @@ function getDateRangeArray(start, end) {
   return arr;
 }
 
+function formatToDhakaTime(date) {
+  return new Date(date).toLocaleString('en-GB', {
+    timeZone: 'Asia/Dhaka',
+    hour12: false
+  }).replace(',', '');
+}
+
+
+// router.get('/live', async (req, res) => {
+//   try {
+//     const db = await connectDB();
+//     const cacheCollection = db.collection('live_cache');
+
+//     // Check if cached data exists and is fresh (within 1 minute)
+//     const cache = await cacheCollection.findOne({ type: 'live' });
+
+//     const now = new Date();
+//     const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
+
+//     if (cache && cache.timestamp > oneMinuteAgo) {
+//       return res.json(cache.data);
+//     }
+
+//     // Fetch fresh data
+//     const liveData = await scrapeLive();
+
+//     // Store in cache (upsert)
+//     await cacheCollection.updateOne(
+//       { type: 'live' },
+//       {
+//         $set: {
+//           type: 'live',
+//           data: liveData,
+//           timestamp: new Date()
+//         }
+//       },
+//       { upsert: true }
+//     );
+
+//     res.json(liveData);
+//   } catch (err) {
+//     console.error('Error in /live route:', err.message);
+//     res.status(500).json({ error: 'Failed to fetch live data' });
+//   }
+// });
+
+// Single stock live data
+
 router.get('/live', async (req, res) => {
   try {
     const db = await connectDB();
-    const cacheCollection = db.collection('live_cache');
+    const cache = await db.collection('live_cache').findOne({ type: 'live' });
 
-    // Check if cached data exists and is fresh (within 1 minute)
-    const cache = await cacheCollection.findOne({ type: 'live' });
+    if (!cache) return res.status(404).json({ error: 'No live data found' });
 
-    const now = new Date();
-    const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
-
-    if (cache && cache.timestamp > oneMinuteAgo) {
-      return res.json(cache.data);
-    }
-
-    // Fetch fresh data
-    const liveData = await scrapeLive();
-
-    // Store in cache (upsert)
-    await cacheCollection.updateOne(
-      { type: 'live' },
-      {
-        $set: {
-          type: 'live',
-          data: liveData,
-          timestamp: new Date()
-        }
-      },
-      { upsert: true }
-    );
-
-    res.json(liveData);
+    res.json({
+      lastUpdated: formatToDhakaTime(new Date(cache.timestamp)),
+      data: cache.data
+    });
   } catch (err) {
-    console.error('Error in /live route:', err.message);
-    res.status(500).json({ error: 'Failed to fetch live data' });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Single stock live data
 router.get('/live/:code', async (req, res) => {
   const code = req.params.code.toUpperCase();
   try {
@@ -74,22 +99,53 @@ router.get('/live/:code', async (req, res) => {
 });
 
 // Route to get DSE30 shares
+// router.get('/dse30', async (req, res) => {
+//   try {
+//     const data = await scrapeDSE30();
+//     res.json(data);
+//   } catch (e) {
+//     res.status(500).json({ error: e.message });
+//   }
+// });
+
 router.get('/dse30', async (req, res) => {
   try {
-    const data = await scrapeDSE30();
-    res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    const db = await connectDB();
+    const cache = await db.collection('dse30_cache').findOne({ type: 'dse30' });
+
+    if (!cache) return res.status(404).json({ error: 'No DSE30 data found' });
+
+    res.json({
+      lastUpdated: formatToDhakaTime(new Date(cache.timestamp)),
+      data: cache.data
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
 // Route to get Top 20 shares
+// router.get('/top20', async (req, res) => {
+//   try {
+//     const data = await scrapeTop20();
+//     res.json(data);
+//   } catch (e) {
+//     res.status(500).json({ error: e.message });
+//   }
+// });
 router.get('/top20', async (req, res) => {
   try {
-    const data = await scrapeTop20();
-    res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    const db = await connectDB();
+    const cache = await db.collection('top20_cache').findOne({ type: 'top20' });
+
+    if (!cache) return res.status(404).json({ error: 'No Top 20 data found' });
+
+    res.json({
+      lastUpdated: formatToDhakaTime(new Date(cache.timestamp)),
+      data: cache.data
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

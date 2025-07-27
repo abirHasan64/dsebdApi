@@ -1,50 +1,72 @@
-const { scrapeLive, scrapeTop20, scrapeDSE30 } = require('./src/scrapers');
-const { scrapeArchiveFromWeb } = require('./src/archiveFetcher');
-const Archive = require('./src/models/archiveModel'); // Assumes you store archive in DB
-const cron = require('node-cron');
+const scrapeLive = require('./src/scrapers/scrapeLive');
+const scrapeDSE30 = require('./src/scrapers/scrapeDSE30');
+const scrapeTop20 = require('./src/scrapers/scrapeTop20');
+const { connectDB } = require('./src/db');
+const cron = require('node-cron'); // Keep it if you plan to use cron scheduling later
 
-// --- LIVE SCRAPERS (Every 30s) ---
-async function scrapeAll() {
+// Self-invoking async function to test scrapeDSE30 on startup
+(async () => {
   try {
-    await Promise.all([
-      scrapeLive(),
-      scrapeTop20(),
-      scrapeDSE30()
+    const dse30 = await scrapeDSE30();
+  } catch (error) {
+    console.error('Error testing scrapeDSE30:', error.message);
+  }
+})();
+
+/**
+ * Save data cache to MongoDB collection `${type}_cache`.
+ * Replaces existing cache document with upsert.
+ * @param {string} type - Cache type (e.g., 'live', 'dse30', 'top20')
+ * @param {any} data - Data to be cached
+ */
+async function saveCache(type, data) {
+  const db = await connectDB();
+  const collection = db.collection(`${type}_cache`);
+
+  await collection.updateOne(
+    { type },
+    {
+      $set: {
+        type,
+        data,
+        timestamp: new Date() // Store UTC server time
+      }
+    },
+    { upsert: true }
+  );
+
+  console.log(`[${type}] Cache saved (${Array.isArray(data) ? data.length : 1} items)`);
+}
+
+/**
+ * Scrape all data sources and save caches.
+ * Runs all scrapes concurrently, then saves caches concurrently.
+ */
+async function scrapeAndSaveAll() {
+  try {
+    const liveRaw = await scrapeLive();
+    const live = liveRaw[0]?.stocks || [];
+
+    // Scrape DSE30 and Top20 concurrently
+    const [dse30, top20] = await Promise.all([
+      scrapeDSE30(),
+      scrapeTop20()
     ]);
-  } catch (err) {
-    console.error('[Scraper Error]', err.message);
+
+    // Save all caches concurrently
+    await Promise.all([
+      saveCache('live', live),
+      saveCache('dse30', dse30),
+      saveCache('top20', top20)
+    ]);
+  } catch (error) {
+    console.error('Error during scraping:', error.message);
   }
 }
 
-scrapeAll();
-setInterval(scrapeAll, 30 * 1000);
+// Run scraping once immediately on startup
+scrapeAndSaveAll();
 
-// --- ARCHIVE SCRAPER (Daily at 3:00PM BD Time) ---
-async function scrapeAndSaveArchive() {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  const dateStr = `${yyyy}-${mm}-${dd}`;
+// Schedule scraping every 60 seconds (can switch to cron later if preferred)
+setInterval(scrapeAndSaveAll, 60 * 1000);
 
-  try {
-    const rows = await scrapeArchiveFromWeb(dateStr, dateStr);
-    for (const row of rows) {
-      await Archive.updateOne(
-        { code: row.code, date: row.date },
-        { $set: row },
-        { upsert: true }
-      );
-    }
-    console.log(`[${dateStr}] Archive data saved (${rows.length} rows)`);
-  } catch (err) {
-    console.error(`[${dateStr}]  Archive fetch failed:`, err.message);
-  }
-}
-
-cron.schedule('0 9 * * *', () => {
-  console.log('3:00 PM BD time: Running archive scraper');
-  scrapeAndSaveArchive();
-}, {
-  timezone: 'Asia/Dhaka'
-});
