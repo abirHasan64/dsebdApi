@@ -25,45 +25,6 @@ function formatToDhakaTime(date) {
 }
 
 
-// router.get('/live', async (req, res) => {
-//   try {
-//     const db = await connectDB();
-//     const cacheCollection = db.collection('live_cache');
-
-//     // Check if cached data exists and is fresh (within 1 minute)
-//     const cache = await cacheCollection.findOne({ type: 'live' });
-
-//     const now = new Date();
-//     const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
-
-//     if (cache && cache.timestamp > oneMinuteAgo) {
-//       return res.json(cache.data);
-//     }
-
-//     // Fetch fresh data
-//     const liveData = await scrapeLive();
-
-//     // Store in cache (upsert)
-//     await cacheCollection.updateOne(
-//       { type: 'live' },
-//       {
-//         $set: {
-//           type: 'live',
-//           data: liveData,
-//           timestamp: new Date()
-//         }
-//       },
-//       { upsert: true }
-//     );
-
-//     res.json(liveData);
-//   } catch (err) {
-//     console.error('Error in /live route:', err.message);
-//     res.status(500).json({ error: 'Failed to fetch live data' });
-//   }
-// });
-
-// Single stock live data
 
 router.get('/live', async (req, res) => {
   try {
@@ -125,14 +86,6 @@ router.get('/dse30', async (req, res) => {
 });
 
 // Route to get Top 20 shares
-// router.get('/top20', async (req, res) => {
-//   try {
-//     const data = await scrapeTop20();
-//     res.json(data);
-//   } catch (e) {
-//     res.status(500).json({ error: e.message });
-//   }
-// });
 router.get('/top20', async (req, res) => {
   try {
     const db = await connectDB();
