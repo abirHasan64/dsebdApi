@@ -24,6 +24,21 @@ function formatToDhakaTime(date) {
   }).replace(',', '');
 }
 
+router.get('/live/indices', async (req, res) => {
+  try {
+    const db = await connectDB();
+    const cache = await db.collection('indices_cache').findOne({ type: 'indices' });
+
+    if (!cache) return res.status(404).json({ error: 'No indices data found' });
+
+    res.json({
+      lastUpdated: formatToDhakaTime(new Date(cache.timestamp)),
+      data: cache.data
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
 router.get('/live', async (req, res) => {
@@ -59,15 +74,7 @@ router.get('/live/:code', async (req, res) => {
   }
 });
 
-// Route to get DSE30 shares
-// router.get('/dse30', async (req, res) => {
-//   try {
-//     const data = await scrapeDSE30();
-//     res.json(data);
-//   } catch (e) {
-//     res.status(500).json({ error: e.message });
-//   }
-// });
+
 
 router.get('/dse30', async (req, res) => {
   try {
