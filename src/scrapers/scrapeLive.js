@@ -2,14 +2,11 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const getStockInfo = require('./getStockInfo');
 const parseCBUL = require('./parseCBUL');
-const scrapeIndicesFromHomepage = require('./scrapeIndicesFromHomepage');
 
 async function scrapeLive() {
   try {
-    const [dse30Resp, dsexResp, top20Resp, homepageResp, cbulResp] = await Promise.all([
-      axios.get('https://www.dsebd.org/dse30_share.php'),
+    const [dsexResp, cbulResp] = await Promise.all([
       axios.get('https://www.dsebd.org/latest_share_price_scroll_l.php'),
-      axios.get('https://www.dsebd.org/top_20_share.php'),
       axios.get('https://www.dsebd.org/'),
       axios.get('https://www.dsebd.org/cbul.php')
     ]);
@@ -40,7 +37,6 @@ async function scrapeLive() {
       }
     });
 
-    const indices = await scrapeIndicesFromHomepage(homepageResp.data);
     const cbulMap = parseCBUL(cbulResp.data);
 
     for (const stock of stocks) {
@@ -56,10 +52,10 @@ async function scrapeLive() {
       })
     );
 
-    return [{ indices, stocks }];
+    return [{ stocks }];
   } catch (error) {
     console.error('Error in scrapeLive:', error.message);
-    return [{ indices: [], stocks: [] }];
+    return [{ stocks: [] }];
   }
 }
 
