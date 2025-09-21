@@ -7,8 +7,7 @@ async function scrapeLive() {
   try {
     const [dsexResp, cbulResp] = await Promise.all([
       axios.get('https://www.dsebd.org/latest_share_price_scroll_l.php'),
-      axios.get('https://www.dsebd.org/'),
-      axios.get('https://www.dsebd.org/cbul.php')
+      axios.get('https://www.dsebd.org/cbul.php'),
     ]);
 
     const stocks = [];

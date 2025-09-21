@@ -2,6 +2,8 @@ const express = require('express');
 const http = require('http');
 const routes = require('./routes');
 const path = require('path');
+require("../autoScraper"); // ✅ start background scraper
+
 
 const app = express();
 const port = process.env.PORT || 3000;
