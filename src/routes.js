@@ -3,6 +3,7 @@ const path = require('path');
 const router = express.Router();
 const { scrapeLive, scrapeDSE30, scrapeTop20 } = require('./scraper');
 const { scrapeArchiveFromWeb } = require('./archiveFetcher');
+const scrapeNews = require("./scrapers/scrapeNews");
 const { connectDB } = require('./db');
 
 // Helper: get array of dates between two dates (inclusive)
@@ -235,7 +236,44 @@ router.get('/archive/:code', async (req, res) => {
   }
 });
 
+// get news articles with sentiment
+// Trigger news scraping manually
+router.get("/news", async (req, res) => {
+  try {
+    await scrapeNews();
+    res.json({ message: "News scraping completed successfully." });
+  } catch (e) {
+    console.error("Error scraping news:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
 
+router.get("/news/all", async (req, res) => {
+  try {
+    const db = await connectDB();
+    const news = await db.collection("news_archive").find({}).sort({ date: -1 }).toArray();
+    res.json(news);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Get latest sentiment scores for a stock
+router.get("/news/:stockCode", async (req, res) => {
+  try {
+    await scrapeNews(); // scrape news & save to DB
+    const db = await connectDB();
+    const news = await db
+      .collection("news_archive")
+      .find({ stockCode: req.params.stockCode.toUpperCase() })
+      .sort({ date: -1 })
+      .toArray();
+    res.json(news);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Simple API health check
 router.get('/', (req, res) => {

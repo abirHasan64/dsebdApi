@@ -6,7 +6,7 @@ const scrapeIndicesFromHomepage = require('./src/scrapers/scrapeIndicesFromHomep
 const { scrapeArchiveFromWeb } = require('./src/archiveFetcher');
 const { connectDB } = require('./src/db');
 const cron = require('node-cron');
-
+const scrapeNews  = require('./src/scrapers/scrapeNews');
 
 // ========== 🔁 Cache Saver ========== //
 async function saveCache(type, data) {
@@ -144,6 +144,17 @@ cron.schedule('0 12 * * *', async () => {
   }
 });
 
+// ========== 📰 News Scraper Cron Job ========== //
+// Run every hour
+cron.schedule('0 * * * *', async () => {
+  console.log('Running automated news scraper...');
+  try {
+    await scrapeNews();
+    console.log('News scraped successfully.');
+  } catch (e) {
+    console.error('News scraping failed:', e.message);
+  }
+});
 // Optional: quick test of DSE30 on startup
 (async () => {
   try {
@@ -153,3 +164,5 @@ cron.schedule('0 12 * * *', async () => {
     console.error('[startup test] Error testing scrapeDSE30:', error.message);
   }
 })();
+
+

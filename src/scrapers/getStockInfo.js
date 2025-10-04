@@ -6,7 +6,7 @@ const parseNAV = require("./parseNAV");
 async function getStockInfo(code) {
   try {
     const url = `https://www.dsebd.org/displayCompany.php?name=${code}`;
-    const res = await axios.get(url);
+    const res = await axios.get(url); // 15 seconds
     const $ = cheerio.load(res.data);
 
     let sector,

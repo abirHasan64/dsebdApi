@@ -12,6 +12,7 @@
     "dotenv": "^17.2.1",
     "express": "^4.x",
     "mongodb": "^5.x",
-    "node-cron": "^4.2.1"
+    "node-cron": "^4.2.1",
+    "sentiment": "^5.0.2"
   }
 }
