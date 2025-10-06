@@ -240,8 +240,9 @@ router.get('/archive/:code', async (req, res) => {
 // Trigger news scraping manually
 router.get("/news", async (req, res) => {
   try {
-    await scrapeNews();
-    res.json({ message: "News scraping completed successfully." });
+    const scraped = await scrapeNews();
+    // return the freshly scraped items to the caller for convenience
+    res.json({ message: "News scraping completed successfully.", items: scraped });
   } catch (e) {
     console.error("Error scraping news:", e.message);
     res.status(500).json({ error: e.message });
@@ -264,9 +265,10 @@ router.get("/news/:stockCode", async (req, res) => {
   try {
     await scrapeNews(); // scrape news & save to DB
     const db = await connectDB();
+    const code = req.params.stockCode.toUpperCase();
     const news = await db
       .collection("news_archive")
-      .find({ stockCode: req.params.stockCode.toUpperCase() })
+      .find({ stockCodes: code })
       .sort({ date: -1 })
       .toArray();
     res.json(news);
