@@ -25,6 +25,34 @@ const sources = [
     url: "https://www.tbsnews.net/economy/industry",
   },
   { name: "ProthomAloBusiness", url: "https://en.prothomalo.com/business" },
+  {
+    name: "NewAgeStocks",
+    url: "https://www.newagebd.net/articlelist/92/stocks",
+  },
+  {
+    name: "NewAgeBanking",
+    url: "https://www.newagebd.net/articlelist/90/banking",
+  },
+  {
+    name: "DhakaTribuneStock",
+    url: "https://www.dhakatribune.com/business/stock",
+  },
+  {
+    name: "DhakaTribuneBank",
+    url: "https://www.dhakatribune.com/business/banks",
+  },
+  {
+    name: "FinancialExpressStock",
+    url: "https://thefinancialexpress.com.bd/page/stock/bangladesh",
+  },
+  {
+    name: "FinancialExpressTrade",
+    url: "https://thefinancialexpress.com.bd/trade",
+  },
+  {
+    name: "FinancialExpressEconomy",
+    url: "https://thefinancialexpress.com.bd/page/economy/bangladesh",
+  },
 ];
 
 function normalizeText(text) {
@@ -91,10 +119,11 @@ async function scrapeSourceArticles(source) {
       "div.card-section h2.card-title a",
       "div.card-section h3.card-title a",
       "div.card-with-image-zoom h3.headline-title a",
-      "h2 a",
-      "h3 a"
+      "div.card-body h2.card-title a",
+      "div.card-body h3.card-title a",
+      "div.tag_tittle_holder h2.title a",
     ];
-  
+
     const articles = [];
     const seenLinks = new Set();
     for (const sel of selectors) {
