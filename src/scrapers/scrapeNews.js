@@ -1,8 +1,22 @@
+/**
+ * News scraper with NLP sentiment analysis
+ * 
+ * Workflow:
+ * 1. Scrapes news articles from 13 financial sources
+ * 2. Sends article titles to Python NLP service for analysis
+ * 3. Checks relevance to DSE stocks and sentiment
+ * 4. Stores matched articles in MongoDB with sentiment scores
+ * 
+ * Requires Python NLP service running on http://localhost:8000
+ */
+
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { connectDB } = require("../db");
 
-const NLP_SERVICE_URL = "http://localhost:8000/analyze_batch"; // Python microservice
+const NLP_SERVICE_URL = "http://localhost:8000/analyze_batch"; // Python microservice endpoint
+
+// List of news sources to scrape
 const sources = [
   {
     name: "DailyStarEconomy",
@@ -55,6 +69,9 @@ const sources = [
   },
 ];
 
+/**
+ * Normalizes text by removing special characters and extra spaces
+ */
 function normalizeText(text) {
   return (text || "")
     .replace(/[^\w\s]/g, " ")
@@ -62,6 +79,9 @@ function normalizeText(text) {
     .trim();
 }
 
+/**
+ * Resolves relative URLs to absolute URLs
+ */
 function resolveUrl(base, relative) {
   try {
     return new URL(relative, base).href;
@@ -70,6 +90,10 @@ function resolveUrl(base, relative) {
   }
 }
 
+/**
+ * Generates search aliases for a stock company name
+ * Creates variations to match articles (e.g., full name, abbreviations)
+ */
 function generateAliases(companyName, code) {
   const aliases = new Set();
   if (!companyName) return [];
@@ -82,6 +106,9 @@ function generateAliases(companyName, code) {
   return Array.from(aliases);
 }
 
+/**
+ * Loads stock data from cache to use for news matching
+ */
 async function loadStockData() {
   const db = await connectDB();
   const cache = await db.collection("live_cache").findOne({ type: "live" });
@@ -98,6 +125,7 @@ async function loadStockData() {
   });
   console.log(
     `[stocks] Loaded ${Object.keys(stockMap).length} companies from live_cache`
+
   );
   return stockMap;
 }

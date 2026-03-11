@@ -6,9 +6,13 @@ const scrapeIndicesFromHomepage = require('./src/scrapers/scrapeIndicesFromHomep
 const { scrapeArchiveFromWeb } = require('./src/archiveFetcher');
 const { connectDB } = require('./src/db');
 const cron = require('node-cron');
-const scrapeNews  = require('./src/scrapers/scrapeNews');
+const scrapeNews = require('./src/scrapers/scrapeNews');
 
-// ========== 🔁 Cache Saver ========== //
+/**
+ * Saves scraped data to MongoDB cache collection
+ * @param {string} type - Cache type (e.g., 'live', 'dse30', 'top20', 'indices')
+ * @param {Array|Object} data - Data to cache
+ */
 async function saveCache(type, data) {
   const db = await connectDB();
   const collection = db.collection(`${type}_cache`);
@@ -28,27 +32,9 @@ async function saveCache(type, data) {
   console.log(`[${type}] Cache saved (${Array.isArray(data) ? data.length : 1} items)`);
 }
 
-// ========== 🔁 Cache Saver for Indices ==========
-async function saveIndicesCache(data) {
-  const db = await connectDB();
-  const collection = db.collection('indices_cache');
-
-  await collection.updateOne(
-    { type: 'indices' },
-    {
-      $set: {
-        type: 'indices',
-        data,
-        timestamp: new Date()
-      }
-    },
-    { upsert: true }
-  );
-
-  console.log(`[indices] Cache saved`);
-}
-
-// ========== 🚀 Scrape Live/DSE30/Top20 ========== //
+/**
+ * Scrapes and caches live stock data, DSE30, and Top20 shares
+ */
 async function scrapeAndSaveAll() {
   try {
     const liveRaw = await scrapeLive();
@@ -65,60 +51,61 @@ async function scrapeAndSaveAll() {
       saveCache('top20', top20)
     ]);
   } catch (error) {
-    console.error('Error during scraping:', error.message);
+    console.error('[scraper] Error during scraping:', error.message);
   }
 }
 
-// ========== 🚀 Scrape Indices ==========
+/**
+ * Scrapes and caches market indices data
+ */
 async function scrapeAndSaveIndices() {
   try {
     const homepageResp = await axios.get('https://www.dsebd.org/');
     const indices = await scrapeIndicesFromHomepage(homepageResp.data);
-
-    await saveIndicesCache(indices);
+    await saveCache('indices', indices);
   } catch (error) {
-    console.error('Error during indices scraping:', error.message);
+    console.error('[indices] Error during scraping:', error.message);
   }
 }
 
-// Run scraping once immediately on startup
+// Initialize scraping on startup
 scrapeAndSaveAll();
 scrapeAndSaveIndices();
 
-// Schedule scraping every 60 seconds for live/DSE30/Top20
+// Schedule live/DSE30/Top20 scraping every 60 seconds
 setInterval(scrapeAndSaveAll, 60 * 1000);
 
-// Schedule scraping every 60 seconds for indices
+// Schedule indices scraping every 60 seconds
 setInterval(scrapeAndSaveIndices, 60 * 1000);
 
-// ========== 📅 Archive Scraper Cron Job ========== //
-// Helper to get yesterday's date (format: YYYY-MM-DD)
+/**
+ * Calculates the date to scrape based on Bangladesh timezone
+ * Returns today if after 4 PM BD time, otherwise returns yesterday
+ * Format: YYYY-MM-DD
+ */
 function getScrapeDate() {
   const now = new Date();
 
-  // Convert current time to BD timezone offset in ms (+6h)
+  // Convert to BD timezone (UTC+6)
   const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
   const bdTime = new Date(utc + (6 * 3600000));
 
-  // If current BD time is after market close + buffer (say 16:00),
-  // scrape today's date; otherwise scrape yesterday.
+  // After 4 PM BD time: scrape today, otherwise scrape yesterday
   if (bdTime.getHours() >= 16) {
-    // After 4 PM BD time, scrape today
     return bdTime.toISOString().slice(0, 10);
   } else {
-    // Before 4 PM, scrape yesterday
     bdTime.setDate(bdTime.getDate() - 1);
     return bdTime.toISOString().slice(0, 10);
   }
 }
 
-// Schedule archive scraping at 6 PM Bangladesh time (12 PM UTC)
+// Archive scraper: Daily at 6 PM BD time (12 PM UTC)
 cron.schedule('0 12 * * *', async () => {
   const startDate = getScrapeDate();
   const endDate = startDate;
 
   try {
-    console.log(`[archive] Starting archive scrape for ${startDate}...`);
+    console.log(`[archive] Starting scrape for ${startDate}...`);
 
     const data = await scrapeArchiveFromWeb(startDate, endDate);
 
@@ -135,34 +122,23 @@ cron.schedule('0 12 * * *', async () => {
       }));
 
       await col.bulkWrite(operations);
-      console.log(`[archive] Archive for ${startDate} saved (${data.length} items)`);
+      console.log(`[archive] ${data.length} items saved for ${startDate}`);
     } else {
-      console.log(`[archive] No data scraped for ${startDate}`);
+      console.log(`[archive] No data found for ${startDate}`);
     }
   } catch (err) {
-    console.error('[archive] Error scraping archive:', err.message);
+    console.error('[archive] Error:', err.message);
   }
 });
 
-// ========== 📰 News Scraper Cron Job ========== //
-// Run every hour
+// News scraper: Hourly at the start of each hour
 cron.schedule('0 * * * *', async () => {
-  console.log('Running automated news scraper...');
   try {
     await scrapeNews();
-    console.log('News scraped successfully.');
-  } catch (e) {
-    console.error('News scraping failed:', e.message);
+    console.log('[news] Scraping completed successfully.');
+  } catch (error) {
+    console.error('[news] Scraping failed:', error.message);
   }
 });
-// Optional: quick test of DSE30 on startup
-(async () => {
-  try {
-    const dse30 = await scrapeDSE30();
-    console.log(`[startup test] DSE30 items: ${dse30.length}`);
-  } catch (error) {
-    console.error('[startup test] Error testing scrapeDSE30:', error.message);
-  }
-})();
 
 

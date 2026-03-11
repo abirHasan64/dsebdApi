@@ -1,3 +1,10 @@
+/**
+ * Scrapes market indices and trading statistics from DSE homepage
+ * Extracts DSE General Index, DSE30, DSE Broad, and market statistics
+ * @param {string} html - HTML content of DSE homepage
+ * @returns {Promise<Array>} Array of indices and market statistics objects
+ */
+
 const cheerio = require('cheerio');
 
 async function scrapeIndicesFromHomepage(html) {
@@ -5,6 +12,7 @@ async function scrapeIndicesFromHomepage(html) {
   const rows = $('.LeftColHome .midrow');
   const data = [];
 
+  // Extract the three main indices (DSE General, DSE30, DSE Broad)
   for (let i = 0; i < 3; i++) {
     const row = $(rows[i]);
     data.push({
@@ -15,6 +23,7 @@ async function scrapeIndicesFromHomepage(html) {
     });
   }
 
+  // Extract trading statistics and market movement summary
   const tradeRow = $(rows[4]);
   const issuesRow = $(rows[6]);
   data.push(

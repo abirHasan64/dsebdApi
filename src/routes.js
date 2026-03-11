@@ -249,12 +249,43 @@ router.get("/news", async (req, res) => {
   }
 });
 
+// Get all news articles from archive
+// Optional: Add ?fresh=true query parameter to trigger fresh scraping before returning results
+// Usage:
+//   GET /news/all                  → Fast: returns cached news instantly
+//   GET /news/all?fresh=true       → Slower: scrapes fresh news first (30-60 sec), then returns
 router.get("/news/all", async (req, res) => {
   try {
+    // Extract 'fresh' query parameter (default: false)
+    const { fresh } = req.query;
+    
+    // If fresh=true, trigger a scrape before returning data
+    // This allows users to opt-in to wait for the latest news when needed
+    if (fresh === 'true') {
+      console.log('[news/all] Fresh scrape requested. Starting scrape...');
+      await scrapeNews();
+      console.log('[news/all] Fresh scrape completed.');
+    }
+    
+    // Connect to database and fetch all news articles
     const db = await connectDB();
-    const news = await db.collection("news_archive").find({}).sort({ date: -1 }).toArray();
-    res.json(news);
+    const news = await db
+      .collection("news_archive")
+      .find({})
+      .sort({ date: -1 }) // Sort by newest first
+      .toArray();
+    
+    // Return response with info about data freshness
+    res.json({
+      fresh: fresh === 'true', // Indicates if data was freshly scraped
+      message: fresh === 'true' 
+        ? "News scraped and retrieved successfully." 
+        : "Cached news retrieved. Use ?fresh=true to scrape the latest.",
+      totalArticles: news.length,
+      items: news
+    });
   } catch (err) {
+    console.error('[news/all] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

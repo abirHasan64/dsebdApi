@@ -1,6 +1,17 @@
+/**
+ * Fetches historical stock data from DSE website
+ * Scrapes the day-end archive for a given date range
+ */
+
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+/**
+ * Scrapes historical stock data from DSE archive
+ * @param {string} startDate - Start date in YYYY-MM-DD format
+ * @param {string} endDate - End date in YYYY-MM-DD format
+ * @returns {Array} Array of stock data objects with OHLC values
+ */
 async function scrapeArchiveFromWeb(startDate, endDate) {
   const url = `https://www.dsebd.org/day_end_archive.php?startDate=${startDate}&endDate=${endDate}&inst=All%20Instrument&archive=data`;
   

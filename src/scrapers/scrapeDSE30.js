@@ -1,3 +1,8 @@
+/**
+ * Scrapes DSE30 (top 30 stocks by market capitalization) data
+ * @returns {Promise<Array>} Array of DSE30 stock data objects
+ */
+
 const axios = require('axios');
 const cheerio = require('cheerio');
 
@@ -7,6 +12,7 @@ async function scrapeDSE30() {
     const $ = cheerio.load(res.data);
     const shares = [];
 
+    // Parse table rows and extract stock data
     $('table.table-bordered tbody tr').each((i, el) => {
       const tds = $(el).find('td');
       if (tds.length > 1) {
@@ -27,7 +33,7 @@ async function scrapeDSE30() {
 
     return shares;
   } catch (error) {
-    console.error('Error in scrapeDSE30:', error);
+    console.error('[scrapeDSE30] Error:', error);
     return [];
   }
 }

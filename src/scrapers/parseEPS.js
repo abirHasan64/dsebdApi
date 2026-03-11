@@ -1,8 +1,17 @@
+/**
+ * Parses Earnings Per Share (EPS) data from DSE company page
+ * Extracts basic EPS for each reporting period
+ * @param {Object} $ - Cheerio jQuery-like object for HTML parsing
+ * @returns {Object} Map of reporting periods to EPS values
+ */
+
 const cheerio = require('cheerio');
 
 function parseEPS($) {
   const headerRows = $('table#company tr.header').slice(0, 4);
   const periodLabels = [];
+  
+  // Extract period labels
   headerRows.eq(1).find('td').each((_, td) => {
     periodLabels.push($(td).text().trim());
   });
@@ -11,6 +20,7 @@ function parseEPS($) {
   const row3Tds = headerRows.eq(2).find('td');
   const row4Tds = headerRows.eq(3).find('td');
 
+  // Handle rowspan attributes to get period endings
   let i3 = 0, i4 = 0;
   for (let i = 0; i < periodLabels.length; i++) {
     const cell3 = row3Tds[i3];
@@ -42,7 +52,7 @@ function parseEPS($) {
     ending: periodEndings[i] || ''
   }));
 
-  // Extract Basic EPS
+  // Extract Basic EPS values
   let basicEPS = {};
   let inEPSSection = false;
 

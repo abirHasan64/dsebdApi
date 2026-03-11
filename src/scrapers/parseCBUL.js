@@ -1,9 +1,16 @@
+/**
+ * Parses Circuit Breaker Upper/Lower price limits from DSE CBUL page
+ * @param {string} html - HTML content of CBUL page
+ * @returns {Object} Map of stock codes to their circuit breaker limits
+ */
+
 const cheerio = require("cheerio");
 
 function parseCBUL(html) {
   const $ = cheerio.load(html);
   const map = {};
 
+  // Extract circuit breaker info from table rows
   $("table.table-bordered tbody tr").each((i, tr) => {
     const tds = $(tr).find("td");
     if (tds.length >= 8) {

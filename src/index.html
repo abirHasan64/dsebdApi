@@ -31,6 +31,12 @@
         <td><code>http://localhost:3000/live/GENNEXT</code> - Live data for stock code GENNEXT</td>
       </tr>
       <tr>
+        <td><code>/live/indices</code></td>
+        <td>GET</td>
+        <td>Get market indices data (DSE General Index, DSE30, DSE Broad)</td>
+        <td><code>http://localhost:3000/live/indices</code> - Market indices data</td>
+      </tr>
+      <tr>
         <td><code>/dse30</code></td>
         <td>GET</td>
         <td>Get data for DSE30 shares</td>
@@ -49,10 +55,28 @@
         <td><code>http://localhost:3000/archive?startDate=2023-08-01&endDate=2023-08-31</code> - Archive data for August 2023</td>
       </tr>
       <tr>
+        <td><code>/archive/latest</code></td>
+        <td>GET</td>
+        <td>Get the latest archived stock data</td>
+        <td><code>http://localhost:3000/archive/latest</code> - Latest archive data</td>
+      </tr>
+      <tr>
         <td><code>/archive/:code</code></td>
         <td>GET</td>
         <td>Get archived data for a specific stock code between dates (query params: <code>startDate</code>, <code>endDate</code>)</td>
         <td><code>http://localhost:3000/archive/GENNEXT?startDate=2023-08-01&endDate=2023-08-31</code> - Archive data for GENNEXT in August 2023</td>
+      </tr>
+      <tr>
+        <td><code>/news/all</code></td>
+        <td>GET</td>
+        <td>Get all scraped news articles from archive</td>
+        <td><code>http://localhost:3000/news/all</code> - All archived news articles</td>
+      </tr>
+      <tr>
+        <td><code>/news/:code</code></td>
+        <td>GET</td>
+        <td>Get scraped news articles for a specific stock code from archive</td>
+        <td><code>http://localhost:3000/news/GENNEXT</code> - News articles for stock code GENNEXT</td>
       </tr>
       <tr>
         <td colspan="4" style="text-align:center; font-weight:bold; color:#d9534f;">

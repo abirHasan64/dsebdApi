@@ -1,3 +1,8 @@
+/**
+ * Scrapes Top 20 shares by trading volume/value
+ * @returns {Promise<Array>} Array of top 20 stock data objects
+ */
+
 const axios = require('axios');
 const cheerio = require('cheerio');
 
@@ -7,6 +12,7 @@ async function scrapeTop20() {
     const $ = cheerio.load(res.data);
     const shares = [];
 
+    // Parse table rows and extract stock data
     $('table.table-bordered tbody tr').each((i, el) => {
       const tds = $(el).find('td');
       if (tds.length > 1) {
@@ -26,7 +32,7 @@ async function scrapeTop20() {
 
     return shares;
   } catch (error) {
-    console.error('Error in scrapeTop20:', error);
+    console.error('[scrapeTop20] Error:', error);
     return [];
   }
 }
